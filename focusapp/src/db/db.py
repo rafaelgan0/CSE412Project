@@ -11,7 +11,13 @@ CORS(app, origins="*")
 @app.route('/api/data')
 def get_data():
     # Connect to your PostgreSQL database
-    connection = psycopg2.connect(connection_string)
+    connection = psycopg2.connect(
+        host=os.environ.get('HOST'),
+        port=os.environ.get('PORT'),
+        database=os.environ.get('DATABASE'),
+        user=os.environ.get('USER'),
+        password=os.environ.get('PASSWORD')
+    )
     
     print("Connected to the database successfully!")
 
