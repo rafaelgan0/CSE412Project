@@ -9,12 +9,18 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import {ToastContainer, toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'
+import { InputAdornment, IconButton } from "@mui/material";
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 const UserLogin = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loginError, setLoginError] = useState('');
-
+    const [showPassword, setShowPassword] = useState(false);
+    const handleClickShowPassword = () => setShowPassword(!showPassword);
+    const handleMouseDownPassword = () => setShowPassword(!showPassword);
+  
     const navigate = useNavigate(); // Use useHistory from react-router
 
     const handleSubmit = async (event) => {
@@ -69,13 +75,26 @@ const UserLogin = () => {
                         onChange={(e) => setUsername(e.target.value)}
                     />
                     <TextField
-                        label="Password"
-                        type="password"
+                        label='Password'
                         variant="outlined"
-                        fullWidth
-                        margin="normal"
-                        value={password}
+                        type={showPassword ? "text" : "password"} // <-- This is where the magic happens
                         onChange={(e) => setPassword(e.target.value)}
+                        InputProps={{ // <-- This is where the toggle button is added.
+                        endAdornment: (
+                            <InputAdornment position="end">
+                            <IconButton
+                                aria-label="toggle password visibility"
+                                onClick={handleClickShowPassword}
+                                onMouseDown={handleMouseDownPassword}
+                            >
+                                {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                            </IconButton>
+                            </InputAdornment>
+                        )
+                        }}
+                        style={{
+                            width: '100%', // Set the width to 100% of the surrounding div
+                        }}
                     />
                     <Button type="submit" variant="contained" color="primary" fullWidth>
                         Login

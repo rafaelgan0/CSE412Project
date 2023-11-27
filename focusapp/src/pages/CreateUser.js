@@ -9,6 +9,9 @@ import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import {ToastContainer, toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'
+import { InputAdornment, IconButton } from "@mui/material";
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 const CreateUser = () => {
   const [username, setUsername] = useState('');
@@ -18,6 +21,9 @@ const CreateUser = () => {
   const [bio, setBio] = useState('');
   const [profileImageUrl, setProfileImageUrl] = useState('');
   const [createError, setCreateError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const handleClickShowPassword = () => setShowPassword(!showPassword);
+  const handleMouseDownPassword = () => setShowPassword(!showPassword);
   
   const navigate = useNavigate();
 
@@ -92,13 +98,26 @@ const CreateUser = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
           <TextField
-            label="Password"
-            type="password"
+            label='Password'
             variant="outlined"
-            fullWidth
-            margin="normal"
-            value={password}
+            type={showPassword ? "text" : "password"} // <-- This is where the magic happens
             onChange={(e) => setPassword(e.target.value)}
+            InputProps={{ // <-- This is where the toggle button is added.
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    onMouseDown={handleMouseDownPassword}
+                  >
+                    {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
+            style={{
+              width: '100%', // Set the width to 100% of the surrounding div
+            }}
           />
           <TextField
             label="Birthday"
