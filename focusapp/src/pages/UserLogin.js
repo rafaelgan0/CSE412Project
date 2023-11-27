@@ -1,3 +1,5 @@
+//pages/UserLogin.js
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router'; // Import useHistory from react-router
 import Navbar from '../components/Navbar';
@@ -12,6 +14,7 @@ const UserLogin = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loginError, setLoginError] = useState('');
+
     const navigate = useNavigate(); // Use useHistory from react-router
 
     const handleSubmit = async (event) => {
@@ -41,9 +44,8 @@ const UserLogin = () => {
                 // Redirect to the main page with user_id
                 toast.success("Login Successful!", {
                     position: toast.POSITION.TOP_CENTER,
-                    onClose: () => navigate('/login') // Navigate after the toast is closed
+                    onClose: () => navigate(`/main-page/${responseData.user_id}`) // Navigate after the toast is closed
                 });
-                navigate(`/main-page/${responseData.user_id}`);
             }
 
         } catch (error) {

@@ -137,6 +137,34 @@ def login():
 
                 # Directly return the user_id or an error message
                 return jsonify({"user_id": result})
+            
+@app.route('/api/userinfo', methods=['POST'])
+def getuserinfo():
+    try: 
+        data = request.json
+        userid = data['user_id']
+    except Exception as e:
+        return jsonify({"error": "Failed to login"})
+    
+    with psycopg2.connect(
+        host=os.environ.get('HOSTNAME'),
+        port=os.environ.get('PORTNUMBER'),
+        database=os.environ.get('DATABASE'),
+        user=os.environ.get('USERNAME'),
+        password=os.environ.get('PASSWORD')
+    ) as connection:
+        print("Connected to the database successfully!")
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT GetStatsByUserId(
+                    %s
+                )
+                """
+            , userid)
 
+            data = cursor.fetchone()[0]
+            
+    
 if __name__ == '__main__':
     app.run(debug=True)

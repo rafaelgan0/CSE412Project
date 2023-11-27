@@ -1,21 +1,20 @@
+//pages/MainPage.js
+
 import React, { useState } from 'react';
 import { useParams } from 'react-router'; // Import useParams from react-router to get the user ID
 import Navbar from '../components/Navbar';
 
 const Main = () => {
-    const [userid, setUserId] = useState('');
+    const { userId } = useParams(); // Extract userId from URL parameters
 
-    function getUserId(id) {
-        setUserId(id);
-    }
     return (
         <div>
             <Navbar />
             <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
                 <h2>Welcome to the Main Page!</h2>
-                {userid && (
+                {userId && (
                     <p>
-                        User ID {userid} successfully logged in.
+                        User ID {userId} successfully logged in.
                     </p>
                 )}
             </div>
