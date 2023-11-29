@@ -4,6 +4,8 @@ import { Routes, Route, Link } from 'react-router-dom';
 import UserLogin from './pages/UserLogin';
 import CreateUser from './pages/CreateUser';
 import Main from './pages/MainPage';
+import Timer from './pages/Timer';
+import SessionInfo from './pages/SessionInfo';
 
 const App = () => {
   return (
@@ -17,6 +19,8 @@ const App = () => {
         <Route path="/create-user" element={<CreateUser />} />
         <Route path="/login" element={<UserLogin />} />
         <Route path="/main-page/:userId" element={<Main />} />
+        <Route path="/timer/:userId/:focusTime" element={<Timer />} />
+        <Route path="/session-info/:userId/:focusTime" element={<SessionInfo />} />
       </Routes>
     </div>
   );

@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
 import axios from 'axios';  // Import axios
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +11,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import { InputAdornment, IconButton } from "@mui/material";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import { Typography, Paper } from '@mui/material';
 
 const CreateUser = () => {
   const [username, setUsername] = useState('');
@@ -54,7 +54,7 @@ const CreateUser = () => {
       if ('success' in response.data) {
         // Redirect to the login page upon successful user creation
         toast.success("User created successfully", {
-          position: toast.POSITION.TOP_CENTER,
+          position: toast.POSITION.TOP_RIGHT,
           onClose: () => navigate('/login') // Navigate after the toast is closed
         });
       } else if ('error' in response.data) {
@@ -77,84 +77,86 @@ const CreateUser = () => {
   };
 
   return (
-    <div>
+    <div style={{alignItems: 'center'}}>
       <Navbar />
       <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
+      <Paper elevation={3} style={{ padding: '20px', marginTop: '10px' }}>
+        <Typography variant="h5">Create User</Typography>
         <form onSubmit={handleSubmit}>
-          <TextField
-            label="Username"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <TextField
-            label="Email"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <TextField
-            label='Password'
-            variant="outlined"
-            type={showPassword ? "text" : "password"} // <-- This is where the magic happens
-            onChange={(e) => setPassword(e.target.value)}
-            InputProps={{ // <-- This is where the toggle button is added.
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="toggle password visibility"
-                    onClick={handleClickShowPassword}
-                    onMouseDown={handleMouseDownPassword}
-                  >
-                    {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                  </IconButton>
-                </InputAdornment>
-              )
-            }}
-            style={{
-              width: '100%', // Set the width to 100% of the surrounding div
-            }}
-          />
-          <TextField
-            label="Birthday"
-            type="date"
-            variant="outlined"
-            InputLabelProps={{ shrink: true }}
-            fullWidth
-            margin="normal"
-            value={birthday}
-            onChange={(e) => setBirthday(e.target.value)}
-          />
-          <TextField
-            label="Bio"
-            multiline
-            rows={4}
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-          />
-          <label htmlFor="profile-picture">
-            <Button variant="contained" color="primary" component="span" fullWidth>
-              Select Profile Picture
+            <TextField
+              label="Username"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <TextField
+              label="Email"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <TextField
+              label='Password'
+              variant="outlined"
+              type={showPassword ? "text" : "password"} // <-- This is where the magic happens
+              onChange={(e) => setPassword(e.target.value)}
+              InputProps={{ // <-- This is where the toggle button is added.
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={handleClickShowPassword}
+                      onMouseDown={handleMouseDownPassword}
+                    >
+                      {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+              style={{
+                width: '100%', // Set the width to 100% of the surrounding div
+              }}
+            />
+            <TextField
+              label="Birthday"
+              type="date"
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+              margin="normal"
+              value={birthday}
+              onChange={(e) => setBirthday(e.target.value)}
+            />
+            <TextField
+              label="Bio"
+              multiline
+              rows={4}
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+            />
+            <label htmlFor="profile-picture">
+              <Button variant="contained" color="primary" component="span" fullWidth>
+                Select Profile Picture
+              </Button>
+            </label>
+            <Typography variant="body2" color="textSecondary" align="center">
+              (Optional: Select a profile picture)
+            </Typography>
+            <Button type="submit" variant="contained" color="primary" fullWidth>
+              Create User
             </Button>
-          </label>
-          <Typography variant="body2" color="textSecondary" align="center">
-            (Optional: Select a profile picture)
-          </Typography>
-          <Button type="submit" variant="contained" color="primary" fullWidth>
-            Create User
-          </Button>
-        </form>
+          </form>
+      </Paper>
+        
         {createError && (
-            <div style={{ marginTop: '10px', color: 'red' }}>
-                {createError}
-            </div>
+            <Typography variant="body1">{createError}</Typography>
         )}
       </div>
       <ToastContainer />

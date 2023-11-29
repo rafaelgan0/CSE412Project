@@ -12,6 +12,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import { InputAdornment, IconButton } from "@mui/material";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import { Typography, Paper } from '@mui/material';
 
 const UserLogin = () => {
     const [username, setUsername] = useState('');
@@ -49,7 +50,7 @@ const UserLogin = () => {
                 console.log('User logged in successfully!', responseData.user_id);
                 // Redirect to the main page with user_id
                 toast.success("Login Successful!", {
-                    position: toast.POSITION.TOP_CENTER,
+                    position: toast.POSITION.TOP_RIGHT,
                     onClose: () => navigate(`/main-page/${responseData.user_id}`) // Navigate after the toast is closed
                 });
             }
@@ -64,54 +65,54 @@ const UserLogin = () => {
         <div>
             <Navbar />
             <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
-                <h2>User Login</h2>
-                <form onSubmit={handleSubmit}>
-                    <TextField
-                        label="Username"
-                        variant="outlined"
-                        fullWidth
-                        margin="normal"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                    />
-                    <TextField
-                        label='Password'
-                        variant="outlined"
-                        type={showPassword ? "text" : "password"} // <-- This is where the magic happens
-                        onChange={(e) => setPassword(e.target.value)}
-                        InputProps={{ // <-- This is where the toggle button is added.
-                        endAdornment: (
-                            <InputAdornment position="end">
-                            <IconButton
-                                aria-label="toggle password visibility"
-                                onClick={handleClickShowPassword}
-                                onMouseDown={handleMouseDownPassword}
-                            >
-                                {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                            </IconButton>
-                            </InputAdornment>
-                        )
-                        }}
-                        style={{
-                            width: '100%', // Set the width to 100% of the surrounding div
-                        }}
-                    />
-                    <Button type="submit" variant="contained" color="primary" fullWidth>
-                        Login
-                    </Button>
-                </form>
+                <Paper elevation={3} style={{ padding: '20px', marginTop: '10px' }}>
+                    <Typography variant="h5">Login</Typography>
+                    <form onSubmit={handleSubmit}>
+                        <TextField
+                            label="Username"
+                            variant="outlined"
+                            fullWidth
+                            margin="normal"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                        />
+                        <TextField
+                            label='Password'
+                            variant="outlined"
+                            type={showPassword ? "text" : "password"} // <-- This is where the magic happens
+                            onChange={(e) => setPassword(e.target.value)}
+                            InputProps={{ // <-- This is where the toggle button is added.
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                <IconButton
+                                    aria-label="toggle password visibility"
+                                    onClick={handleClickShowPassword}
+                                    onMouseDown={handleMouseDownPassword}
+                                >
+                                    {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                </IconButton>
+                                </InputAdornment>
+                            )
+                            }}
+                            style={{
+                                width: '100%', // Set the width to 100% of the surrounding div
+                            }}
+                        />
+                        <Button style={{ margin: '10px 0px 10px 0px'}}type="submit" variant="contained" color="primary" fullWidth>
+                            Login
+                        </Button>
+                    </form>
 
-                {loginError && (
-                    <div style={{ marginTop: '10px', color: 'red' }}>
-                        {loginError}
-                    </div>
-                )}
+                    {loginError && (
+                        <Typography variant="body1">{loginError}</Typography>
+                    )}
 
-                <Link to="/create-user" style={{ textDecoration: 'none' }}>
-                    <Button variant="outlined" color="primary" fullWidth>
-                        Create Account
-                    </Button>
-                </Link>
+                    <Link to="/create-user" style={{ textDecoration: 'none' }}>
+                        <Button style={{ margin: '0px 0px 10px 0px'}} variant="outlined" color="primary" fullWidth>
+                            Create Account
+                        </Button>
+                    </Link>
+                </Paper>
             </div>
             <ToastContainer />
         </div>
