@@ -232,7 +232,35 @@ def get_user_info():
         return jsonify(user_info)
     else:
         return jsonify({"error": "User not found or no information available"})
+
+
+@app.route('/api/postthread', methods=['POST'])
+def post_user_thread():
+    try:
+        data = request.json
+        user_id = data['user_Id']
+        description = data['description']
+    except Exception as e:
+        return jsonify({"error": "Failed to post thread"})
     
+    with connect_db() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                    SELECT CreatePost(
+                        %s, %s
+                    )  
+                """,
+                (user_id, description)
+            )
+            # Use fetchone() directly in the query
+            result = cursor.fetchone()
+
+    if result[0] != -1:
+        return jsonify({"success": "successfully posted thread"})
+    else:
+        return jsonify({"error": "Failed to post thread"})
+
 @app.route('/api/userthreads', methods=['POST'])
 def get_user_threads():
     try:
@@ -263,7 +291,9 @@ def update_user_stats_time():
                 """
 
                 """
-            )        
+            )   
+
+     
 
 if __name__ == '__main__':
     app.run(debug=True)
