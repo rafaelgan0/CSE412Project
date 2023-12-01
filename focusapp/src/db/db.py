@@ -234,12 +234,15 @@ def get_user_info():
         return jsonify({"error": "User not found or no information available"})
 
 
+from datetime import timedelta
+
 @app.route('/api/postthread', methods=['POST'])
 def post_user_thread():
     try:
         data = request.json
         user_id = data['user_Id']
         description = data['description']
+        time_str = data['time']
     except Exception as e:
         return jsonify({"error": "Failed to post thread"})
     
@@ -256,10 +259,29 @@ def post_user_thread():
             # Use fetchone() directly in the query
             result = cursor.fetchone()
 
-    if result[0] != -1:
-        return jsonify({"success": "successfully posted thread"})
-    else:
-        return jsonify({"error": "Failed to post thread"})
+            if result[0] != -1:
+                # Convert the time to a timedelta object
+                # Convert the time string to a timedelta object
+                time_parts = [int(part) for part in time_str.split(':')]
+                time_interval = timedelta(hours=time_parts[0], minutes=time_parts[1])
+
+                # Call the UpdateTotalTime function to update TotalTime in the Stats table
+                cursor.execute(
+                    """
+                        SELECT UpdateTotalTime(
+                            %s, %s
+                        )
+                    """,
+                    (user_id, time_interval)
+                )
+
+                # Commit the changes
+                connection.commit()
+
+                return jsonify({"success": "successfully posted thread"})
+            else:
+                return jsonify({"error": "Failed to post thread"})
+
 
 @app.route('/api/userthreads', methods=['POST'])
 def get_user_threads():

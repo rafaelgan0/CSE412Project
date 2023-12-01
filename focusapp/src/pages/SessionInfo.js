@@ -18,7 +18,8 @@ const SessionInfoPage = () => {
     // Send API request to login
     const response = await axios.post('http://127.0.0.1:5000/api/postthread', {
         user_Id: userId,
-        description: description
+        description: description,
+        time: focusTime
     });
 
     const responseData = response.data;
