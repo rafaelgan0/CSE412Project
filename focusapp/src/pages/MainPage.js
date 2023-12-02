@@ -2,36 +2,48 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
-import { Typography, Paper, Grid } from '@mui/material';
+import { Typography, Paper, Tabs, Tab, Card, CardContent, CardActions, Button, Grid } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import Button from '@mui/material/Button';
 
 const MainPage = () => {
   const { userId } = useParams();
   const [userInfo, setUserInfo] = useState(null);
+  const [userThreads, setUserThreads] = useState([]);
+  const [currentTab, setCurrentTab] = useState(0);
   const [focusTime, setFocusTime] = useState(30);
   const navigate = useNavigate();
   
   useEffect(() => {
-    const fetchUserInfo = async () => {
+    const fetchUserData = async () => {
       try {
-        const response = await axios.post('http://127.0.0.1:5000/api/userinfo', {
+        // Fetch user info
+        const userInfoResponse = await axios.post('http://127.0.0.1:5000/api/userinfo', {
           user_id: userId,
         });
-        setUserInfo(response.data);
+        setUserInfo(userInfoResponse.data);
+
+        // Fetch user threads
+        const userThreadsResponse = await axios.post('http://127.0.0.1:5000/api/userthreads', {
+          user_id: userId,
+        });
+        setUserThreads(userThreadsResponse.data.user_threads);
       } catch (error) {
-        console.error('Error fetching user Info:', error);
+        console.error('Error fetching user data:', error);
       }
     };
 
     if (userId) {
-      fetchUserInfo();
+      fetchUserData();
     }
   }, [userId]);
 
   const handleStartFocusSession = () => {
     // Redirect to Timer.js with user ID and focus time
     navigate(`/timer/${userId}/${focusTime}`);
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setCurrentTab(newValue);
   };
 
   return (
@@ -101,8 +113,33 @@ const MainPage = () => {
             {/* Content for the second div */}
             {/* For example, you can add another Paper component or any other content */}
             <Paper elevation={3} style={{ padding: '20px', marginTop: '10px' }}>
-            <Typography variant="h5">Second Div Content:</Typography>
-            {/* Add content here */}
+            {/* <Typography variant="h4">User Threads</Typography> */}
+                <div style={{ flex: 1, margin: '10px'}}>
+                <Tabs value={currentTab} onChange={handleTabChange} centered>
+                    <Tab label="Your Posts" />
+                </Tabs>
+                <TabPanel value={currentTab} index={0}>
+                    {userThreads.map((thread) => (
+                    <Card key={thread.ThreadId} style={{ margin: '10px 0' }}>
+                        <CardContent>
+                        <Typography variant="h6">Thread ID: {thread.ThreadId}</Typography>
+                        <Typography variant="body1">Thread Text: {thread.ThreadText}</Typography>
+                        <Typography variant="body1">Date: {thread.Date}</Typography>
+                        {/* Include other thread info fields here */}
+                        </CardContent>
+                        {/* Add additional actions if needed */}
+                        <CardActions>
+                        <Button size="small" color="primary">
+                            Edit
+                        </Button>
+                        <Button size="small" color="secondary">
+                            Delete
+                        </Button>
+                        </CardActions>
+                    </Card>
+                    ))}
+                </TabPanel>
+                </div>
             </Paper>
         </div>
         {/* Third Div */}
@@ -135,5 +172,18 @@ const MainPage = () => {
     </div>
   );
 };
+
+// Custom TabPanel component to conditionally render content based on the selected tab
+const TabPanel = ({ children, value, index }) => {
+    return (
+      <div hidden={value !== index}>
+        {value === index && (
+          <div>
+            {children}
+          </div>
+        )}
+      </div>
+    );
+  };
 
 export default MainPage;

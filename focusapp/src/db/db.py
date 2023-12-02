@@ -292,12 +292,24 @@ def get_user_threads():
         return jsonify({"error": "Failed to get user threads"})
     
     with connect_db() as connection:
-        with connection as cursor:
+        with connection.cursor() as cursor:
             cursor.execute(
                 """
-
+                    SELECT * FROM GetUserThreads(%s)
                 """
-            )
+            , (user_id,))
+
+            # Fetch the results
+            results = cursor.fetchall()
+
+            # Convert the results to a list of dictionaries
+            columns = [desc[0] for desc in cursor.description]
+            user_threads = [dict(zip(columns, row)) for row in results]
+
+            # Return the results as JSON
+            return jsonify({"user_threads": user_threads})
+
+        
 
 @app.route('/api/usertimer', methods=['POST'])
 def update_user_stats_time():
