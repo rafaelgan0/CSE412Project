@@ -3,7 +3,7 @@ from flask_cors import CORS
 import psycopg2
 from psycopg2 import sql
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
 # connection_string = os.environ.get('CONNECTION_STRING')
 
@@ -295,9 +295,19 @@ def get_user_threads():
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                    SELECT * FROM GetUserThreads(%s)
-                """
-            , (user_id,))
+                SELECT
+                    T.ThreadId,
+                    T.ThreadText,
+                    T.Date,
+                    T.time,  -- Assuming the column name is "time"
+                    U.Username::text
+                FROM
+                    Thread T
+                    JOIN "User" U ON T.UserId = U.UserId
+                WHERE
+                    T.UserId = %s
+                """, 
+                (user_id,))
 
             # Fetch the results
             results = cursor.fetchall()
@@ -306,9 +316,12 @@ def get_user_threads():
             columns = [desc[0] for desc in cursor.description]
             user_threads = [dict(zip(columns, row)) for row in results]
 
+            # Convert the time objects to strings
+            for thread in user_threads:
+                thread['time'] = str(thread['time'])
+
             # Return the results as JSON
             return jsonify({"user_threads": user_threads})
-
         
 
 @app.route('/api/usertimer', methods=['POST'])
@@ -326,6 +339,37 @@ def update_user_stats_time():
 
                 """
             )   
+
+@app.route('/api/deleteuser', methods=['POST'])
+def delete_user():
+    try:
+        data = request.json
+        user_id = data.get('user_id')
+
+        with connect_db() as connection:
+            with connection.cursor() as cursor:
+                # Execute the SQL code to delete the user and related data
+                cursor.execute("""
+                    BEGIN;
+                    DELETE FROM Stats WHERE UserId = %s;
+                    DELETE FROM Thread WHERE UserId = %s;
+                    DELETE FROM Comment WHERE UserId = %s;
+                    DELETE FROM LikesComment WHERE UserId = %s;
+                    DELETE FROM Follows WHERE User1 = %s OR User2 = %s;
+                    DELETE FROM "User" WHERE UserID = %s;
+                    COMMIT;
+                """, (user_id, user_id, user_id, user_id, user_id, user_id, user_id))
+
+                # Check if any rows were affected, indicating successful deletion
+                if cursor.rowcount > 0:
+                    return jsonify({"success": "User deleted successfully"})
+                else:
+                    return jsonify({"error": "User not found or could not be deleted"})
+
+    except Exception as e:
+        # Handle exceptions, log errors, or raise as needed
+        print(f"Error: {e}")
+        return jsonify({"error": "Unexpected error has occurred"})
 
      
 
