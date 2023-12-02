@@ -311,7 +311,6 @@ def get_user_threads():
 
             # Fetch the results
             results = cursor.fetchall()
-
             # Convert the results to a list of dictionaries
             columns = [desc[0] for desc in cursor.description]
             user_threads = [dict(zip(columns, row)) for row in results]
@@ -322,6 +321,31 @@ def get_user_threads():
 
             # Return the results as JSON
             return jsonify({"user_threads": user_threads})
+        
+@app.route('/api/deletethread', methods=['POST'])
+def delete_thread():
+    try:
+        data = request.json
+        thread_id = data['thread_id']
+        
+        with connect_db() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    BEGIN;
+                    DELETE FROM Comment WHERE ThreadId = %s;
+                    DELETE FROM LikesComment WHERE CommentId IN (SELECT CommentId FROM Comment WHERE ThreadId = %s);
+                    DELETE FROM Thread WHERE ThreadId = %s;
+                    COMMIT;
+                """, (thread_id, thread_id, thread_id))
+
+                if cursor.rowcount > 0:
+                    return jsonify({"success": "Thread deleted successfully"})
+                else:
+                    return jsonify({"error": "Thread not found or could not be deleted"})
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "Unexpected error has occurred"})
         
 
 @app.route('/api/usertimer', methods=['POST'])

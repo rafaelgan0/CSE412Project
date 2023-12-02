@@ -16,6 +16,8 @@ import {
   MenuItem,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const MainPage = () => {
   const { userId } = useParams();
@@ -37,6 +39,7 @@ const MainPage = () => {
         const userThreadsResponse = await axios.post('http://127.0.0.1:5000/api/userthreads', {
           user_id: userId,
         });
+        console.log(userThreadsResponse.data.user_threads)
         setUserThreads(userThreadsResponse.data.user_threads);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -65,9 +68,11 @@ const MainPage = () => {
           user_id: userId,
         });
 
-        if (response.data.success) {
-          alert('User deleted successfully');
-          navigate('/login'); // Redirect to the login page or your desired destination
+        if (response.status === 200) {
+          toast.success('User deleted successfully', {
+            position: toast.POSITION.TOP_RIGHT,
+            onClose: () => navigate('/login'),
+          });
         } else {
           alert('User not found or could not be deleted');
         }
@@ -77,6 +82,37 @@ const MainPage = () => {
       }
     }
   };
+
+  const handleDeleteThread = async (threadId) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this thread?');
+  
+    if (confirmDelete) {
+      try {
+        const response = await axios.post('http://127.0.0.1:5000/api/deletethread', {
+          thread_id: threadId,
+        });
+  
+        if (response.status === 200) {
+          toast.success('Thread deleted successfully', {
+            position: toast.POSITION.TOP_RIGHT,
+          });
+  
+          // Remove the deleted thread from userThreads state
+          setUserThreads((prevThreads) => prevThreads.filter((thread) => thread.ThreadId !== threadId));
+        } else {
+          toast.error('Thread not found or could not be deleted', {
+            position: toast.POSITION.TOP_RIGHT,
+          });
+        }
+      } catch (error) {
+        console.error('Error deleting thread:', error);
+        toast.error('An error occurred while deleting the thread', {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      }
+    }
+  };
+  
 
   return (
     <div>
@@ -153,15 +189,22 @@ const MainPage = () => {
                 {userThreads.map((thread) => (
                   <Card key={thread.ThreadId} style={{ margin: '10px 0' }}>
                     <CardContent>
-                      <Typography variant="h6">Thread ID: {thread.ThreadId}</Typography>
-                      <Typography variant="body1">Thread Text: {thread.ThreadText}</Typography>
-                      <Typography variant="body1">Date: {thread.Date}</Typography>
+                      <Typography variant="h6">Thread ID: {thread.threadid}</Typography>
+                      <Typography variant="body1">{thread.username} posted:</Typography>
+
+                      <Typography variant="body1">Time: {thread.time}</Typography>
+                      <Typography variant="body1">Thread Text: {thread.threadtext}</Typography>
+                      <Typography variant="body1">Date: {thread.date}</Typography>
                     </CardContent>
                     <CardActions>
                       <Button size="small" color="primary">
                         Edit
                       </Button>
-                      <Button size="small" color="secondary">
+                      <Button
+                        size="small"
+                        color="secondary"
+                        onClick={() => handleDeleteThread(thread.threadid)}
+                      >
                         Delete
                       </Button>
                     </CardActions>
@@ -193,27 +236,22 @@ const MainPage = () => {
               onClick={handleStartFocusSession}
             >
               Start Focus Session
-
             </Button>
-            </Paper>
+          </Paper>
         </div>
       </div>
-      
+      <ToastContainer></ToastContainer>
     </div>
   );
 };
 
 // Custom TabPanel component to conditionally render content based on the selected tab
 const TabPanel = ({ children, value, index }) => {
-    return (
-      <div hidden={value !== index}>
-        {value === index && (
-          <div>
-            {children}
-          </div>
-        )}
-      </div>
-    );
-  };
+  return (
+    <div hidden={value !== index}>
+      {value === index && <div>{children}</div>}
+    </div>
+  );
+};
 
 export default MainPage;
