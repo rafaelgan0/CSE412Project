@@ -14,6 +14,8 @@ import {
   Grid,
   Select,
   MenuItem,
+  TextField, // Import TextField component
+  Modal, // Import Modal component
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
@@ -28,6 +30,10 @@ const MainPage = () => {
   const [currentTab, setCurrentTab] = useState(0);
   const [focusTime, setFocusTime] = useState(30);
 
+  // Add state variables for bio editing
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [editedBio, setEditedBio] = useState('');
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -39,7 +45,7 @@ const MainPage = () => {
         const userThreadsResponse = await axios.post('http://127.0.0.1:5000/api/userthreads', {
           user_id: userId,
         });
-        console.log(userThreadsResponse.data.user_threads)
+        console.log(userThreadsResponse.data.user_threads);
         setUserThreads(userThreadsResponse.data.user_threads);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -85,18 +91,18 @@ const MainPage = () => {
 
   const handleDeleteThread = async (threadId) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this thread?');
-  
+
     if (confirmDelete) {
       try {
         const response = await axios.post('http://127.0.0.1:5000/api/deletethread', {
           thread_id: threadId,
         });
-  
+
         if (response.status === 200) {
           toast.success('Thread deleted successfully', {
             position: toast.POSITION.TOP_RIGHT,
           });
-  
+
           // Remove the deleted thread from userThreads state
           setUserThreads((prevThreads) => prevThreads.filter((thread) => thread.ThreadId !== threadId));
         } else {
@@ -112,7 +118,43 @@ const MainPage = () => {
       }
     }
   };
-  
+
+  // Add a function to handle bio editing
+  const handleEditBio = () => {
+    setIsEditingBio(true);
+  };
+
+  // Add a function to cancel bio editing and restore the original bio text
+  const handleCancelEditBio = () => {
+    setIsEditingBio(false);
+    setEditedBio(userInfo.Bio);
+  };
+
+  // Add a function to save the edited bio
+  const handleSaveBio = async () => {
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/api/updatebio', {
+        user_id: userId,
+        bio: editedBio,
+      });
+
+      if (response.status === 200) {
+        toast.success('User bio updated successfully', {
+          position: toast.POSITION.TOP_RIGHT,
+          onClose: () => setIsEditingBio(false), // Close the edit pop-up
+        });
+      } else {
+        toast.error('Failed to update user bio', {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      }
+    } catch (error) {
+      console.error('Error updating user bio:', error);
+      toast.error('An error occurred while updating the user bio', {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+    }
+  };
 
   return (
     <div>
@@ -133,7 +175,18 @@ const MainPage = () => {
                   </Grid>
                   <Grid item xs={12}>
                     <Typography variant="body2">Bio:</Typography>
-                    <Typography variant="body1">{userInfo.Bio}</Typography>
+                    {isEditingBio ? (
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={4}
+                        variant="outlined"
+                        value={editedBio}
+                        onChange={(e) => setEditedBio(e.target.value)}
+                      />
+                    ) : (
+                      <Typography variant="body1">{userInfo.Bio}</Typography>
+                    )}
                   </Grid>
                   <Grid item xs={6}>
                     <Typography variant="body2">Birthday:</Typography>
@@ -167,6 +220,22 @@ const MainPage = () => {
                     <Typography variant="body1">{userInfo.Sessions}</Typography>
                   </Grid>
                 </Grid>
+                <Grid item xs={12}>
+                  {isEditingBio ? (
+                    <>
+                      <Button variant="outlined" color="primary" onClick={handleSaveBio}>
+                        Save
+                      </Button>
+                      <Button variant="outlined" color="secondary" onClick={handleCancelEditBio}>
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button variant="outlined" color="primary" onClick={handleEditBio}>
+                      Edit Bio
+                    </Button>
+                  )}
+                </Grid>
               </Paper>
               <Button
                 variant="contained"
@@ -190,7 +259,7 @@ const MainPage = () => {
                   <Card key={thread.ThreadId} style={{ margin: '10px 0' }}>
                     <CardContent>
                       <Typography variant="h6">Thread ID: {thread.threadid}</Typography>
-                      <Typography variant="body1">{thread.username} posted:</Typography>
+                      <Typography variant="body1">{thread.username} posted</Typography>
 
                       <Typography variant="body1">Time: {thread.time}</Typography>
                       <Typography variant="body1">Thread Text: {thread.threadtext}</Typography>

@@ -395,7 +395,30 @@ def delete_user():
         print(f"Error: {e}")
         return jsonify({"error": "Unexpected error has occurred"})
 
-     
+
+@app.route('/api/updatebio', methods=['POST'])
+def update_bio():
+    try:
+        data = request.json
+        user_id = data['user_id']
+        new_bio = data['bio']
+
+        with connect_db() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE "User"
+                    SET Bio = %s
+                    WHERE UserId = %s
+                """, (new_bio, user_id))
+
+                connection.commit()
+
+        return jsonify({"success": "User bio updated successfully"})
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "Failed to update user bio"})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
