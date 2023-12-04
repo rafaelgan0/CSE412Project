@@ -101,7 +101,7 @@ def create_user():
     except Exception as e:
         # Handle exceptions, log errors, or raise as needed
         print(f"Error: {e}")
-        return jsonify({"error": "Unexpected error has occurred"})
+        return jsonify({"error": "Unexpected error has occurred"}), 500
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -206,14 +206,17 @@ def get_user_info():
                     DaysInRow,
                     Points,
                     TotalTime,
-                    Sessions
+                    Sessions,
+                    NumberOfLikes,
+                    NumberOfFollowing,
+                    NumberOfFollowers
                 FROM GetUserInformation(%s)
                 """,
                 (user_id,)
             )
 
             result = cursor.fetchone()
-
+    print('result', result)
     if result:
         # Convert the result into a JSON response
         user_info = {
@@ -226,12 +229,15 @@ def get_user_info():
             "DaysInRow": result[6],
             "Points": result[7],
             "TotalTime": str(result[8]),  # Assuming TotalTime is an INTERVAL type
-            "Sessions": result[9]
+            "Sessions": result[9],
+            "TotalLikes": result[10],
+            "Following": result[11],
+            "Followers": result[12]
         }
 
         return jsonify(user_info)
     else:
-        return jsonify({"error": "User not found or no information available"})
+        return jsonify({"error": "User not found or no information available"}), 500
 
 
 from datetime import timedelta
@@ -280,7 +286,7 @@ def post_user_thread():
 
                 return jsonify({"success": "successfully posted thread"})
             else:
-                return jsonify({"error": "Failed to post thread"})
+                return jsonify({"error": "Failed to post thread"}), 500
 
 
 @app.route('/api/userthreads', methods=['POST'])
@@ -298,8 +304,8 @@ def get_user_threads():
                 SELECT
                     T.ThreadId,
                     T.ThreadText,
-                    T.Date,
-                    T.time,  -- Assuming the column name is "time"
+                    TO_CHAR(T.Date, 'YYYY-MM-DD') AS Date,
+                    EXTRACT(HOUR FROM T.Time)::text || ':' || EXTRACT(MINUTE FROM T.Time)::text AS Time,
                     U.Username::text
                 FROM
                     Thread T
@@ -341,11 +347,11 @@ def delete_thread():
                 if cursor.rowcount > 0:
                     return jsonify({"success": "Thread deleted successfully"})
                 else:
-                    return jsonify({"error": "Thread not found or could not be deleted"})
+                    return jsonify({"error": "Thread not found or could not be deleted"}), 500
 
     except Exception as e:
         print(f"Error: {e}")
-        return jsonify({"error": "Unexpected error has occurred"})
+        return jsonify({"error": "Unexpected error has occurred"}), 500
         
 
 @app.route('/api/usertimer', methods=['POST'])
@@ -388,12 +394,12 @@ def delete_user():
                 if cursor.rowcount > 0:
                     return jsonify({"success": "User deleted successfully"})
                 else:
-                    return jsonify({"error": "User not found or could not be deleted"})
+                    return jsonify({"error": "User not found or could not be deleted"}), 500
 
     except Exception as e:
         # Handle exceptions, log errors, or raise as needed
         print(f"Error: {e}")
-        return jsonify({"error": "Unexpected error has occurred"})
+        return jsonify({"error": "Unexpected error has occurred"}), 500
 
 
 @app.route('/api/updatebio', methods=['POST'])
@@ -417,8 +423,149 @@ def update_bio():
 
     except Exception as e:
         print(f"Error: {e}")
-        return jsonify({"error": "Failed to update user bio"})
+        return jsonify({"error": "Failed to update user bio"}), 500
+    
+@app.route('/api/editthread', methods=['POST'])
+def update_thread():
+    try:
+        data = request.json
+        thread_id = data['thread_id']
+        new_thread = data['thread_text']
 
+        with connect_db() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE Thread
+                    SET threadText = %s
+                    WHERE threadid = %s
+                """, (new_thread, thread_id))
+
+                connection.commit()
+
+        return jsonify({"success": "Thread updated successfully"})
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "Failed to update thread"}), 500
+    
+@app.route('/api/explorethreads', methods=['POST'])
+def explorethreads():
+    try:
+        data = request.json
+        user_id = data['user_id']
+
+        with connect_db() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT
+                        T.ThreadId,
+                        T.ThreadText,
+                        T.UserId AS ThreadUserId,
+                        U.UserName AS ThreadUserName,
+                        TO_CHAR(T.Date, 'YYYY-MM-DD') AS Date,
+                        EXTRACT(HOUR FROM T.Time)::text || ':' || EXTRACT(MINUTE FROM T.Time)::text AS Time,
+                        CASE WHEN F.User2 IS NOT NULL THEN TRUE ELSE FALSE END AS Following,
+                        CASE WHEN LT.UserId IS NOT NULL THEN TRUE ELSE FALSE END AS Liked
+                    FROM
+                        Thread T
+                    LEFT JOIN
+                        Follows F ON T.UserId = F.User2 AND F.User1 = %s
+                    LEFT JOIN
+                        LikesThread LT ON T.ThreadId = LT.ThreadId AND LT.UserId = %s
+                    LEFT JOIN
+                        "User" U ON T.UserId = U.UserId
+                    WHERE
+                        T.UserId != %s;
+                """, (user_id, user_id, user_id))
+
+                results = cursor.fetchall()
+
+                columns = [desc[0] for desc in cursor.description]
+                explore_threads = [dict(zip(columns, row)) for row in results]
+
+                return jsonify({"explore_threads": explore_threads})
+
+    except Exception as e:
+        print("Failed to retrieve explore threads:", str(e))
+        return jsonify({"error": "Failed to pull threads"})
+
+@app.route('/api/likethread', methods=['POST'])
+def likethread():
+    try: 
+        data = request.json
+        user_id = data['user_id']
+        thread_id = data['thread_id']
+
+        with connect_db() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("INSERT INTO LikesThread VALUES (%s, %s);", (user_id, thread_id))
+
+            # Commit the transaction
+            connection.commit()
+
+            return jsonify({"Success" : "Liked thread successfully!"})
+        
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Failed to like the thread"}), 500
+
+@app.route('/api/followuser', methods=['POST'])
+def followuser():
+    try: 
+        data = request.json
+        user_id1 = data['user_id1']
+        user_id2 = data['user_id2']
+
+        with connect_db() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("INSERT INTO Follows VALUES (%s, %s);", (user_id1, user_id2))
+            
+            # Commit the transaction
+            connection.commit()
+
+            return jsonify({"Success": "Followed user successfully"})
+
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Failed to follow the user"}), 500
+
+@app.route('/api/unlikethread', methods=['POST'])
+def unlikethread():
+    try: 
+        data = request.json
+        user_id = data['user_id']
+        thread_id = data['thread_id']
+
+        with connect_db() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    DELETE FROM LikesThread WHERE UserId = %s AND ThreadId = %s
+                """, (user_id, thread_id))
+
+            return jsonify({"Success" : "Unliked thread successfully!"})
+
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Failed to unlike the thread"}), 500
+
+@app.route('/api/unfollowuser', methods=['POST'])
+def unfollowuser():
+    try: 
+        data = request.json
+        user_id1 = data['user_id1']
+        user_id2 = data['user_id2']
+
+        with connect_db() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    DELETE FROM Follows WHERE User1 = %s AND User2 = %s
+                """, (user_id1, user_id2))
+
+            return jsonify({"Success" : "Unfollowed user successfully"})
+
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Failed to unfollow the user"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

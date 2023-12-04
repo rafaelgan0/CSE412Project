@@ -9,12 +9,9 @@ const SessionInfoPage = () => {
   const { userId, focusTime } = useParams();
   const [description, setDescription] = useState('');
   const navigate = useNavigate();
-  const [postError, setPostError] = useState('');
 
   const handleSubmit = async (event) => {
-    // Add your logic to handle the form submission (e.g., sending data to the server)
-    console.log(`User ID: ${userId}, Focus Time: ${focusTime}, Description: ${description}`);
-    // You can also navigate to another page or perform any other actions here
+    // console.log(`User ID: ${userId}, Focus Time: ${focusTime}, Description: ${description}`);
     // Send API request to login
     const response = await axios.post('http://127.0.0.1:5000/api/postthread', {
         user_Id: userId,
@@ -28,10 +25,8 @@ const SessionInfoPage = () => {
         toast.error(responseData.error, {
             position: toast.POSITION.TOP_RIGHT
         });
-        setPostError(responseData.error || 'Failed to post thread');
         console.log(responseData);
     } else {
-        setPostError('');
         console.log('Posted thread successfully')
 
         toast.success('Thread Posted Successfully!', {
@@ -53,7 +48,7 @@ const SessionInfoPage = () => {
         <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Paper elevation={3} style={{ maxWidth: '600px', padding: '20px' }}>
                 <Typography variant="h4">Focus Session Information</Typography>
-                <Typography variant="body1">User ID: {userId}</Typography>
+                {/* <Typography variant="body1">User ID: {userId}</Typography> */}
                 <Typography variant="body1">Focus Time: {focusTime} minutes</Typography>
                 <TextField
                 multiline

@@ -4,15 +4,14 @@ import React from 'react';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Button from '@mui/material/Button';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   return (
     <AppBar position="static">
       <Toolbar>
-        <Button color="inherit">Home</Button>
-        <Button color="inherit">About</Button>
-        <Button color="inherit">Services</Button>
-        <Button color="inherit">Contact</Button>
+        <Button component={Link}
+            to="/" color="inherit">Focus</Button>
       </Toolbar>
     </AppBar>
   );
