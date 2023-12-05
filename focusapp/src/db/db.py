@@ -239,9 +239,6 @@ def get_user_info():
     else:
         return jsonify({"error": "User not found or no information available"}), 500
 
-
-from datetime import timedelta
-
 @app.route('/api/postthread', methods=['POST'])
 def post_user_thread():
     try:
