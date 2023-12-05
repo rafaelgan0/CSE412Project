@@ -341,10 +341,7 @@ def delete_thread():
                     COMMIT;
                 """, (thread_id, thread_id, thread_id))
 
-                if cursor.rowcount > 0:
-                    return jsonify({"success": "Thread deleted successfully"})
-                else:
-                    return jsonify({"error": "Thread not found or could not be deleted"}), 500
+                return jsonify({"success": "Thread deleted successfully"})
 
     except Exception as e:
         print(f"Error: {e}")
@@ -388,10 +385,7 @@ def delete_user():
                 """, (user_id, user_id, user_id, user_id, user_id, user_id, user_id))
 
                 # Check if any rows were affected, indicating successful deletion
-                if cursor.rowcount > 0:
-                    return jsonify({"success": "User deleted successfully"})
-                else:
-                    return jsonify({"error": "User not found or could not be deleted"}), 500
+                return jsonify({"success": "User deleted successfully"})
 
     except Exception as e:
         # Handle exceptions, log errors, or raise as needed
